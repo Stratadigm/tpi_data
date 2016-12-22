@@ -411,12 +411,12 @@ func (ds *DS) GetUserwEmail(email string) (*User, error) {
 	cst := make([]*User, 0)
 	spk, err := q.GetAll(c, &cst) // *[]*User
 	if err != nil {
-		return nil, fmt.Errorf("Get by email error %v", err)
+		return nil, DSErr{When: time.Now(), What: "Get by email not found:" + email + err.Error()}
 	}
 	if len(spk) > 0 {
 		return cst[0], nil
 	}
-	return nil, nil
+	return nil, DSErr{When: time.Now(), What: "Get by email not found:" + email}
 
 }
 
