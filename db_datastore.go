@@ -165,9 +165,9 @@ func (ds *DS) Validate(v interface{}) error {
 			log.Errorf(ds.Ctx, "Invalid email entered: %v\n", email)
 			return DSErr{When: time.Now(), What: "Validate error: invalid email " + email}
 		}
-		user, err := ds.GetUserwEmail(email)
-		if user != nil || err != nil {
-			log.Errorf(ds.Ctx, "Email already in use: %v, %v\n", email, err)
+		user, _ := ds.GetUserwEmail(email)
+		if user != nil { //|| err != nil {
+			log.Errorf(ds.Ctx, "Email already in use: %v \n", email)
 			return DSErr{When: time.Now(), What: "Validate error: email already in use " + email}
 		}
 		password := reflect.ValueOf(v).Elem().FieldByName("Password").String()
@@ -633,4 +633,40 @@ func ReadCloudImage(Ctx context.Context, filename string) (*image.Image, error) 
 	}
 
 	return &slurp, nil
+}
+
+//GetToken gets the token with string id provided as argument. Returns (token, nil) if token found and ("", DSErr) if token not found
+func (ds *DS) GetToken(token string) (string, error) {
+
+	c := ds.Ctx
+	var err error
+
+	k := datastore.NewKey(c, "token", token, 0, nil)
+	tok := &AuthToken{token}
+	err = datastore.Get(c, k, tok)
+	if err != nil {
+		log.Errorf(c, "GetToken datastore get: %v \n", err)
+		return "", err
+	}
+
+	return token, nil
+
+}
+
+//PutToken puts the token into datastore after creating complete key with string id provided as argument. Returns nil if successfully put and DSErr if not
+func (ds *DS) PutToken(token string) error {
+
+	c := ds.Ctx
+	var err error
+
+	k := datastore.NewKey(c, "token", token, 0, nil)
+	tok := &AuthToken{token}
+	_, err = datastore.Put(c, k, tok)
+	if err != nil {
+		log.Errorf(c, "PutToken datastore put: %v \n", err)
+		return err
+	}
+
+	return nil
+
 }
