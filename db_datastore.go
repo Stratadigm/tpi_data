@@ -35,6 +35,7 @@ var (
 	total                   = int64(0)
 	bucket                  = "thalipriceindex.appspot.com"
 	validEmail              = regexp.MustCompile("^.*@.*\\.(com|org|in|mail|io)$")
+	fake                    = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MDAwLCJpc3MiOiJ0ZXN0In0.QsODzZu3lUZMVdhbO76u3Jv02iYCvEHcYVUI1kOWEU0`
 )
 
 const PerPage = 20
@@ -635,8 +636,8 @@ func ReadCloudImage(Ctx context.Context, filename string) (*image.Image, error) 
 	return &slurp, nil
 }
 
-//GetToken gets the token with string id provided as argument. Returns (token, nil) if token found and ("", DSErr) if token not found
-func (ds *DS) GetToken(token string) (string, error) {
+//GetToken gets the token with string id provided as argument. Returns (nil) if token found and (DSErr) if token not found
+func (ds *DS) GetToken(token string) error {
 
 	c := ds.Ctx
 	var err error
@@ -645,11 +646,19 @@ func (ds *DS) GetToken(token string) (string, error) {
 	tok := &AuthToken{token}
 	err = datastore.Get(c, k, tok)
 	if err != nil {
+		if err == datastore.ErrNoSuchEntity {
+			/*if err1 := ds.PutToken(fake); err1 != nil {
+				log.Errorf(c, "GetToken put fake token %v \n", err1)
+				return err1
+			}
+			return err1*/
+			return err
+		}
 		log.Errorf(c, "GetToken datastore get: %v \n", err)
-		return "", err
+		return err
 	}
 
-	return token, nil
+	return nil
 
 }
 
