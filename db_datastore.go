@@ -118,6 +118,48 @@ func (ds *DS) dsChildKey(t reflect.Type, id int64, pk *datastore.Key) *datastore
 
 /* Interface */
 
+//FilteredList returns a slice of v filtered by filterStr and value
+func (ds *DS) FilteredList(v interface{}, filterStr string, value interface{}, offset ...int) error {
+
+	if reflect.TypeOf(v).Kind() != reflect.Ptr {
+		return DSErr{When: time.Now(), What: "Get error: pointer reqd"}
+	}
+	c := ds.Ctx
+	//s := reflect.TypeOf(v).Elem()
+	//cs := reflect.MakeSlice(s, 0, 1e6)
+	entity := reflect.ValueOf(v).Elem().Slice(0, 1).Index(0).Type().Name() //v is &[]User
+	q := datastore.NewQuery(entities[entity]).Order("Id")
+	if filterStr != "" {
+		switch value.(type) {
+		case int64:
+			if value.(int64) != int64(0) {
+				q = q.Filter(filterStr, value)
+			}
+		case int:
+			if reflect.ValueOf(value).Int() != int64(0) {
+				q = q.Filter(filterStr, value)
+			}
+		default:
+		}
+	}
+	if offset[0] != 0 {
+		q = q.Limit(PerPage + offset[0]).Offset(offset[0])
+	} else {
+		q = q.Limit(PerPage).Offset(0)
+	}
+	_, err := q.GetAll(c, v)
+	if err != nil {
+		//return nil, fmt.Errorf("Get %s list error", entity)
+		return DSErr{When: time.Now(), What: fmt.Sprintf("Get %s list error: %v", entity, err)}
+	}
+	//for i, k := range ks {
+	//	cs[i].Id = k.IntID()
+	//}
+	//reflect.ValueOf(v).Elem().Set(cs)
+	return nil
+
+}
+
 //List returns a slice of v
 func (ds *DS) List(v interface{}, offset ...int) error {
 
@@ -317,13 +359,13 @@ func (ds *DS) Get(v interface{}) error {
 		}
 		k = ds.dsKey(reflect.TypeOf(v).Elem(), id) //complete key
 	} else {
-		return DSErr{When: time.Now(), What: "Get error: id not set"}
+		return DSErr{When: time.Now(), What: "Get error : id not set"}
 		//k = ds.dsKey(reflect.TypeOf(v).Elem())
 	}
 
 	c := ds.Ctx
 	if k == nil {
-		return fmt.Errorf("Get error - key create error")
+		return DSErr{When: time.Now(), What: "Get error : key create error"}
 	}
 
 	//if err := datastore.Get(c, k, reflect.ValueOf(v).Interface()); err != nil {
@@ -337,8 +379,11 @@ func (ds *DS) Get(v interface{}) error {
 //Update updates the entity in the datastore. Must have Id field set. Returns nil (success) or error
 func (ds *DS) Update(v interface{}) error {
 
+	if reflect.TypeOf(v).Kind() != reflect.Ptr {
+		return DSErr{When: time.Now(), What: "Get error: pointer reqd"}
+	}
 	c := ds.Ctx
-	k := ds.datastoreKey(reflect.ValueOf(v).FieldByName("Id").Int())
+	k := ds.datastoreKey(reflect.ValueOf(v).Elem().FieldByName("Id").Int())
 	_, err := datastore.Put(c, k, v)
 	if err != nil {
 		return fmt.Errorf("Updating error %v", err)
