@@ -3,6 +3,7 @@ package tpi_data
 import (
 	_ "image"
 	_ "image/jpeg"
+	"reflect"
 	"time"
 )
 
@@ -25,5 +26,60 @@ type Thali struct {
 func NewThali(id int64) *Thali {
 
 	return &Thali{Id: id}
+
+}
+
+//Validate checks u for errors optionally against v. If len(v)==0 then all fields of u to be checked (CREATE). If len(v)==1, then only provided fields of u to be checked and empty fields to be replaced by those of v (UPDATE)
+func (t *Thali) Validate(v ...interface{}) error {
+
+	if len(v) == 0 { // CREATE
+		name := t.Name
+		if len(name) < 3 {
+			return DSErr{When: time.Now(), What: "validate venue invalid name "}
+		}
+		if t.VenueId == int64(0) || t.UserId == int64(0) {
+			return DSErr{When: time.Now(), What: "validate thali missing venue id "}
+		}
+		return nil
+	} else { // UPDATE
+		v0 := v[0]
+		if reflect.TypeOf(v0).Kind() != reflect.Ptr {
+			return DSErr{When: time.Now(), What: "validate thali pointer reqd"}
+		}
+		s := reflect.TypeOf(v0).Elem()
+		if _, ok := entities[s.Name()]; !ok {
+			return DSErr{When: time.Now(), What: "validate want thali got " + s.Name()}
+		}
+		switch s.Name() {
+		case "Thali":
+			v0v := reflect.ValueOf(v0).Elem()
+			if v0v.Kind() != reflect.Struct {
+				return DSErr{When: time.Now(), What: "validate needs struct arg got " + v0v.Kind().String()}
+			}
+			set := 0
+			for i := 0; i < v0v.NumField(); i++ {
+				uu := reflect.ValueOf(t).Elem()
+				fi := uu.Field(i)
+				vi := v0v.Field(i)
+				if reflect.DeepEqual(fi.Interface(), reflect.Zero(fi.Type()).Interface()) {
+					if vi.IsValid() {
+						fi.Set(vi)
+						set++
+					}
+				}
+			}
+			name := t.Name
+			if len(name) < 3 {
+				return DSErr{When: time.Now(), What: "validate venue invalid name "}
+			}
+			if t.VenueId == int64(0) || t.UserId == int64(0) {
+				return DSErr{When: time.Now(), What: "validate thali missing venue id "}
+			}
+			return nil
+		default:
+			return DSErr{When: time.Now(), What: "validate want thali got :  " + s.Name()}
+		}
+		return nil
+	}
 
 }
