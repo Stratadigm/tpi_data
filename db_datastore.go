@@ -143,7 +143,7 @@ func (ds *DS) FilteredList(v interface{}, filterStr string, value interface{}, o
 		}
 	}
 	if offset[0] != 0 {
-		q = q.Limit(PerPage + offset[0]).Offset(offset[0])
+		q = q.Limit(PerPage /*+ offset[0]*/).Offset(offset[0])
 	} else {
 		q = q.Limit(PerPage).Offset(0)
 	}
@@ -161,6 +161,37 @@ func (ds *DS) FilteredList(v interface{}, filterStr string, value interface{}, o
 }
 
 //List returns a slice of v
+/*func (ds *DS) List(v interface{}, offset ...string) error {
+
+	if reflect.TypeOf(v).Kind() != reflect.Ptr {
+		return DSErr{When: time.Now(), What: "Get error: pointer reqd"}
+	}
+	c := ds.Ctx
+	//s := reflect.TypeOf(v).Elem()
+	//cs := reflect.MakeSlice(s, 0, 1e6)
+	entity := reflect.ValueOf(v).Elem().Slice(0, 1).Index(0).Type().Name() //v is &[]User
+	q := datastore.NewQuery(entities[entity]).Order("Id")
+	if len(offset) != 0 {
+		cursor, err := datastore.DecodeCursor(offset[0])
+		if err != nil {
+			//return DSErr{When: time.Now(), What: "get cursor " + err.Error()}
+		} else {
+			q = q.Start(cursor).Limit(PerPage)
+		}
+	}
+	_, err := q.GetAll(c, v)
+	if err != nil {
+		//return nil, fmt.Errorf("Get %s list error", entity)
+		return DSErr{When: time.Now(), What: fmt.Sprintf("Get %s list error: %v", entity, err)}
+	}
+	//for i, k := range ks {
+	//	cs[i].Id = k.IntID()
+	//}
+	//reflect.ValueOf(v).Elem().Set(cs)
+	return nil
+
+}*/
+
 func (ds *DS) List(v interface{}, offset ...int) error {
 
 	if reflect.TypeOf(v).Kind() != reflect.Ptr {
@@ -172,7 +203,7 @@ func (ds *DS) List(v interface{}, offset ...int) error {
 	entity := reflect.ValueOf(v).Elem().Slice(0, 1).Index(0).Type().Name() //v is &[]User
 	q := datastore.NewQuery(entities[entity]).Order("Id")
 	if offset[0] != 0 {
-		q = q.Limit(PerPage + offset[0]).Offset(offset[0])
+		q = q.Limit(PerPage /*+ offset[0]*/).Offset(offset[0])
 	} else {
 		q = q.Limit(PerPage).Offset(0)
 	}

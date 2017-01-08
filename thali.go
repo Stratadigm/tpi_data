@@ -56,6 +56,13 @@ func (t *Thali) Validate(v ...interface{}) error {
 			if v0v.Kind() != reflect.Struct {
 				return DSErr{When: time.Now(), What: "validate needs struct arg got " + v0v.Kind().String()}
 			}
+			if t.Id == int64(-999) {
+				if t.Name == v0v.FieldByName("Name").String() {
+					return nil
+				} else {
+					return DSErr{When: time.Now(), What: "delete validate name " + t.Name}
+				}
+			}
 			set := 0
 			for i := 0; i < v0v.NumField(); i++ {
 				uu := reflect.ValueOf(t).Elem()

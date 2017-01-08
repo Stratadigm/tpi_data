@@ -88,7 +88,7 @@ func (u *User) Validate(v ...interface{}) error {
 			return nil
 		}
 
-	} else { // UPDATE
+	} else { // UPDATE / DELETE
 		v0 := v[0]
 		if reflect.TypeOf(v0).Kind() != reflect.Ptr {
 			return DSErr{When: time.Now(), What: "Validate User pointer reqd"}
@@ -102,6 +102,13 @@ func (u *User) Validate(v ...interface{}) error {
 			v0v := reflect.ValueOf(v0).Elem()
 			if v0v.Kind() != reflect.Struct {
 				return DSErr{When: time.Now(), What: "Validate needs struct arg got " + v0v.Kind().String()}
+			}
+			if u.Id == int64(-999) {
+				if u.Name == v0v.FieldByName("Name").String() {
+					return nil
+				} else {
+					return DSErr{When: time.Now(), What: "delete validate name " + u.Name}
+				}
 			}
 			set := 0
 			for i := 0; i < v0v.NumField(); i++ {

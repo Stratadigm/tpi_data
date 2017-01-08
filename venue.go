@@ -51,6 +51,13 @@ func (u *Venue) Validate(v ...interface{}) error {
 			if v0v.Kind() != reflect.Struct {
 				return DSErr{When: time.Now(), What: "validate needs struct arg got " + v0v.Kind().String()}
 			}
+			if u.Id == int64(-999) {
+				if u.Name == v0v.FieldByName("Name").String() {
+					return nil
+				} else {
+					return DSErr{When: time.Now(), What: "delete validate name " + u.Name}
+				}
+			}
 			set := 0
 			for i := 0; i < v0v.NumField(); i++ {
 				uu := reflect.ValueOf(u).Elem()

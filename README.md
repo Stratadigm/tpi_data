@@ -63,49 +63,49 @@ User also implements the Marshaler interface
 
 Entities should implement their own validation by implementing Validator (defining Validate) so all data definition is encapsulated. Validate takes as argument an optional argument which can be used to differentiate between Create and Update requests. 
 
-``type Validator interface {
+    type Validator interface {
 
         func Validate(v ...interface{}) error
 
-}``
+    }
 
 ### Marshaler ###
 
 Entities that want to customize json encoding/decoding should implement Marshaler interface by defining MarshalJSON function. User defines MarshalJSON to hide / blank out the password field before encoding JSON to the response writer. 
 
-``func (u *User) MarshalJSON() ([]byte, error) {
+        func (u *User) MarshalJSON() ([]byte, error) {
 
-	type Alias User
+                type Alias User
 
-	if !appengine.IsDevAppServer() {
+                if !appengine.IsDevAppServer() {
+        
+                        u.Password = ""
 
-		u.Password = ""
+                }
 
-	}
+                return json.Marshal(&struct {
 
-	return json.Marshal(&struct {
+                        *Alias
 
-		*Alias
+                }{
 
-	}{
+                        Alias: (*Alias)(u),
 
-		Alias: (*Alias)(u),
+                },
 
-	},
+                )
 
-	)
-
-}``
+        }
 
 Alias is used because it has the same fields as User but not the methods. The following would cause a stack overflow:
 
-``func (u *User) MarshalJSON() ([]byte, error) {
+        func (u *User) MarshalJSON() ([]byte, error) {
  
-        u.Password = ""
+                u.Password = ""
 
-        return json.Marshal(u)
+                return json.Marshal(u)
 
-}``
+        }
 
 ## DAO ##
 
