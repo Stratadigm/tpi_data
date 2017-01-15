@@ -59,7 +59,7 @@ func (u *User) MarshalJSON() ([]byte, error) {
 
 	type Alias User
 	if !appengine.IsDevAppServer() {
-		//	u.Password = ""
+		u.Password = ""
 	}
 	return json.Marshal(&struct {
 		*Alias

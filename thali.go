@@ -16,11 +16,22 @@ type Thali struct {
 	Region    string    `json:"region" schema:"region"` // 1-3 target cuisine
 	Price     float64   `json:"price" schema:"price"`
 	//Photo     *image.RGBA `json:"image"`
-	Photo    string `json:"image"`
-	UserId   int64  `json:"userid"`
-	VenueId  int64  `json:"venue" schema:"venue"`
-	Verfied  bool   `json:"verified"`
-	Accepted bool   `json:"accepted"`
+	Photo    string   `json:"image"`
+	Media    PhotoUrl `json:"media"`
+	UserId   int64    `json:"userid"`
+	VenueId  int64    `json:"venue" schema:"venue"`
+	Verfied  bool     `json:"verified"`
+	Accepted bool     `json:"accepted"`
+}
+
+type PhotoUrl struct {
+	Url  string `json:"url"`
+	Size Rect   `json:"size"`
+}
+
+type Rect struct {
+	W int `json:"w"`
+	H int `json:"h"`
 }
 
 func NewThali(id int64) *Thali {

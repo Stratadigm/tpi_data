@@ -486,15 +486,15 @@ func (ds *DS) GetUserwEmail(email string) (*User, error) {
 	c := ds.Ctx
 	q := datastore.NewQuery("user").Filter("Email=", email)
 	cst := make([]*User, 0)
-	spk, err := q.GetAll(c, &cst) // *[]*User
+	_, err := q.GetAll(c, &cst) // *[]*User
 	if err != nil {
 		return nil, DSErr{When: time.Now(), What: "Get by email not found:" + email + err.Error()}
 	}
-	if len(spk) > 0 {
+	if len(cst) > 0 {
 		return cst[0], nil
+	} else {
+		return nil, DSErr{When: time.Now(), What: "Get by email not found:" + email}
 	}
-	return nil, DSErr{When: time.Now(), What: "Get by email not found:" + email}
-
 }
 
 //GetUserKey uses unique email to return User, Key and nil (sucess) or nil, nil, error
